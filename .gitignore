@@ -1,1 +1,3 @@
-/target
+/resp0disc-hidden/service/target
+/resp0disc-hidden/redis_data
+/resp0disc-hidden/postgres_data
