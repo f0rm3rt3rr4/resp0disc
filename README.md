@@ -110,3 +110,7 @@ country's most trusted, transparent, and unbiased journalists.
 * Tor browser (preferred), or any other tor-proxied browser
 
 # WIP (Stay tuned !)
+
+# How to use as, as whistleblower
+
+## 
