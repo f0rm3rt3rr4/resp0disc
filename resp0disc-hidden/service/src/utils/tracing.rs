@@ -11,13 +11,13 @@ use crate::utils::config::TracingConfig;
 use crate::consts;
 
 
-fn mk_layer<S>(
+fn mk_layer<R>(
     config: &TracingConfig,
     writer: WithMaxLevel<NonBlocking>,
-    registry: S,
+    registry: R,
     with_ansi: bool,
-) -> Layered<Box<dyn Layer<S> + Send + Sync>, S, S>
-where S: Subscriber + for<'a> LookupSpan<'a> + Send + Sync,
+) -> Layered<Box<dyn Layer<R> + Send + Sync>, R, R>
+where R: Subscriber + for<'ls> LookupSpan<'ls> + Send + Sync,
 {
      let layer = tracing_subscriber::fmt::Layer::default()
         .with_writer(BoxMakeWriter::new(writer))
@@ -33,16 +33,24 @@ where S: Subscriber + for<'a> LookupSpan<'a> + Send + Sync,
     registry.with(layer)
 }
 
-pub fn init_tracing(config: &TracingConfig) -> Vec<WorkerGuard> {
-    let mut guards: Vec<WorkerGuard> = vec![];
-
-    let registry = Registry::default();
-
+fn mk_stdout_layer<R>(
+    config: &TracingConfig, guards: &mut Vec<WorkerGuard>, registry: R
+) -> Layered<Box<dyn Layer<R> + Send + Sync>, R, R>
+where R: Subscriber + for<'ls> LookupSpan<'ls> + Send + Sync
+{
     let (stdout, _guard) = non_blocking(std::io::stdout());
     let stdout = stdout.with_max_level(config.max_level.to_level());
     guards.push(_guard);
 
-    let registry = mk_layer(config, stdout, registry, true);
+    mk_layer(config, stdout, registry, true)
+}
+
+pub fn init_tracing(config: &TracingConfig) -> Vec<WorkerGuard> {
+    let mut guards: Vec<WorkerGuard> = vec![];
+
+    let registry = Registry::default();
+    
+    let registry = mk_stdout_layer(config, &mut guards, registry);
 
     let registry = if config.log_to_file {
         let file_appender = rolling::hourly(&config.log_dir, consts::LOG_FILE_NAME);
@@ -52,14 +60,12 @@ pub fn init_tracing(config: &TracingConfig) -> Vec<WorkerGuard> {
 
         mk_layer(&config, file, registry, false)
     } else {
-        // We add stdout again, which does nothing - so we fulfill the type
+        // We add stdout again, which does nothing, so we fulfill the type
         // expectation
-        let (stdout, _guard) = non_blocking(std::io::stdout());
-        let stdout = stdout.with_max_level(config.max_level.to_level());
-        guards.push(_guard);
-
-        mk_layer(&config, stdout, registry, false)
+        mk_stdout_layer(config, &mut guards, registry)
     };
+    
+    //todo Add Loki tracing
 
     tracing::subscriber::set_global_default(registry)
         .expect("Unable to set tracing default global subscriber");
