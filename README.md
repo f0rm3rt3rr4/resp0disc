@@ -100,7 +100,10 @@ available to the public. Our vision is for *resp0disc* to operate within
 countries such as Romania, Slovakia, Bulgaria, and Ukraine, working with each
 country's most trusted, transparent, and unbiased journalists.
 
-# Prerequisites
+
+# Hidden Service
+
+## Prerequisites
 
 * Linux based machine (server)
 * Tor
@@ -109,8 +112,53 @@ country's most trusted, transparent, and unbiased journalists.
 * Docker
 * Tor browser (preferred), or any other tor-proxied browser
 
-# WIP (Stay tuned !)
 
-# How to use as, as whistleblower
+## Configuration
 
-## 
+* **worker_num**:
+  Sets number of workers to start (per bind address).
+  If 0 is provided, the number of workers is set to number of logical CPUs. 
+  Note that the server factory passed to new will be instantiated at least once  
+  per worker. See bind() docs for more on how worker count and bind address
+ resolution causes multiple server factory instantiations.
+
+
+* **worker_max_blocking_threads**: Sets max number of threads for each worker's
+  blocking task thread pool. One thread pool is set up per worker; not shared 
+  across workers. If set to 0, default value is 512 divided by the number of 
+  workers. One thread pool is set up per worker; not shared across workers.
+
+ 
+* **keepalive_ms**: HTTP Keepalive, in milliseconds. If 0 is provided, we 
+  default to 5000ms.
+
+
+* **backlog**: Sets the maximum number of pending connections. This refers to
+  the number of clients that can be waiting to be served. Exceeding this number
+  results in the client getting an error when attempting to connect. It should
+  only affect servers under significant load. Generally set in the 64–2048 
+  range. If 0 is provided, we default to 2048. This method will have no effect
+  if called after a bind().
+
+
+* **max_connections**: Sets the per-worker maximum number of concurrent 
+  connections. All socket listeners will stop accepting connections when this 
+  limit is reached for each worker. If 0 is provided, we default to a 25000.
+
+
+* **client_request_timeout_ms**: Sets server client timeout for first request. 
+  Defines a timeout for reading client request head. If a client does not
+  transmit the entire set headers within this time, the request is terminated 
+  with a 408 (Request Timeout) error. If set to 0, we default to 5000 milliseconds.
+
+
+* **client_disconnect_timeout_ms**: Sets server connection shutdown timeout. 
+  Defines a timeout for connection shutdown. If a shutdown procedure does not 
+  complete within this time, the request is dropped. If set to 0, we default to
+  5000 milliseconds.
+
+
+* **shutdown_timeout**: Sets timeout for graceful worker shutdown of workers. 
+  After receiving a stop signal, workers have this much time to finish serving
+  requests. Workers still alive after the timeout are force dropped. If set to 
+  0, we default to 30 seconds.
