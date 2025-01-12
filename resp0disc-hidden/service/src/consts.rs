@@ -1,3 +1,9 @@
 pub static CONFIG_PATH_DEV: &str = "./config/dev.yml";
 pub static CONFIG_PATH_PROD: &str = "./config/prod.yml";
 pub static LOG_FILE_NAME: &str = "app.log";
+pub static HTTP_KEEPALIVE: u64 = 5_000;
+pub static HTTP_BACKLOG: u32 = 2048;
+pub static HTTP_MAX_CONNECTIONS: usize = 25_000;
+pub static HTTP_CLIENT_REQUEST_TIMEOUT: u64 = 5_000;
+pub static HTTP_DISCONNECT_TIMEOUT: u64 = 5_000;
+pub static HTTP_SHUTDOWN_TIMEOUT: u64 = 30;

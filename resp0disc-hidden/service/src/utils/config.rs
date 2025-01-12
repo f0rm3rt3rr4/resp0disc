@@ -43,6 +43,33 @@ impl Env {
 pub struct ServerConfig {
     pub host: String,
     pub port: u16,
+    pub worker_num: usize,
+    pub worker_max_blocking_threads: usize,
+    pub keepalive_ms: u64,
+    pub backlog: u32,
+    pub max_connections: usize,
+    pub client_request_timeout_ms: u64,
+    pub client_disconnect_timeout_ms: u64,
+    pub server_hostname: String,
+    pub shutdown_timeout: u64,
+}
+
+impl Clone for ServerConfig {
+    fn clone(&self) -> Self {
+        Self {
+            host: self.host.clone(),
+            port: self.port,
+            worker_num: self.worker_num,
+            worker_max_blocking_threads: self.worker_max_blocking_threads,
+            keepalive_ms: self.keepalive_ms,
+            backlog: self.backlog,
+            max_connections: self.max_connections,
+            client_request_timeout_ms: self.client_request_timeout_ms,
+            client_disconnect_timeout_ms: self.client_disconnect_timeout_ms,
+            server_hostname: self.server_hostname.clone(),
+            shutdown_timeout: self.shutdown_timeout,
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]

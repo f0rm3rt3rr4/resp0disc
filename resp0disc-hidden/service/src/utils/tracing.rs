@@ -7,7 +7,7 @@ use tracing_subscriber::fmt::writer::{MakeWriterExt};
 use tracing_subscriber::layer::{Layered, SubscriberExt};
 use tracing_subscriber::Registry;
 use tracing_subscriber::registry::LookupSpan;
-use crate::config::TracingConfig;
+use crate::utils::config::TracingConfig;
 use crate::consts;
 
 
@@ -36,11 +36,12 @@ where S: Subscriber + for<'a> LookupSpan<'a> + Send + Sync,
 pub fn init_tracing(config: &TracingConfig) -> Vec<WorkerGuard> {
     let mut guards: Vec<WorkerGuard> = vec![];
 
+    let registry = Registry::default();
+
     let (stdout, _guard) = non_blocking(std::io::stdout());
     let stdout = stdout.with_max_level(config.max_level.to_level());
     guards.push(_guard);
 
-    let registry = Registry::default();
     let registry = mk_layer(config, stdout, registry, true);
 
     let registry = if config.log_to_file {
@@ -51,7 +52,7 @@ pub fn init_tracing(config: &TracingConfig) -> Vec<WorkerGuard> {
 
         mk_layer(&config, file, registry, false)
     } else {
-        // We add stdout again, which does nothing - so we fulfill the type 
+        // We add stdout again, which does nothing - so we fulfill the type
         // expectation
         let (stdout, _guard) = non_blocking(std::io::stdout());
         let stdout = stdout.with_max_level(config.max_level.to_level());
