@@ -1,0 +1,12 @@
+server:
+  host: "127.0.0.1"
+  port: 8080
+
+tracing:
+  max_level: "DEBUG"
+  file_name: true
+  line_number: true
+  thread_id: true
+  event_target: false
+  log_to_file: true
+  log_dir: "./log"
