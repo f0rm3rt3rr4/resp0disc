@@ -14,6 +14,8 @@ fn set_worker_num(config: &mut ServerConfig) {
         } else {
             let msg: &str = "Unable to retrieve available parallelism.";
             error!(msg);
+            // Sleep for 1s to wait for non-blocking trace to flush, then panic
+            std::thread::sleep(Duration::from_secs(1));
             panic!("{}", msg);
         }
     }
