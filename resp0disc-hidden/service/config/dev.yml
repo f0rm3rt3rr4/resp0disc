@@ -18,4 +18,5 @@ tracing:
   thread_id: true
   event_target: false
   log_to_file: true
+  pretty: true
   log_dir: "./log"

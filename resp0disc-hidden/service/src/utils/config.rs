@@ -90,6 +90,7 @@ pub struct TracingConfig {
     pub event_target: bool,
     pub log_to_file: bool,
     pub log_dir: String,
+    pub pretty: bool,
 }
 
 #[derive(Debug, Deserialize)]

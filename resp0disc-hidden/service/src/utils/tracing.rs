@@ -16,19 +16,34 @@ fn mk_layer<R>(
     writer: WithMaxLevel<NonBlocking>,
     registry: R,
     with_ansi: bool,
+    pretty: bool
 ) -> Layered<Box<dyn Layer<R> + Send + Sync>, R, R>
 where R: Subscriber + for<'ls> LookupSpan<'ls> + Send + Sync,
 {
-     let layer = tracing_subscriber::fmt::Layer::default()
-        .with_writer(BoxMakeWriter::new(writer))
-        .with_file(config.file_name)
-        .with_line_number(config.line_number)
-        .with_thread_ids(config.thread_id)
-        .with_target(config.event_target)
-        .with_level(true)
-        .with_ansi(with_ansi)
-        .compact()
-        .boxed();
+     let layer = if pretty {
+         tracing_subscriber::fmt::Layer::default()
+             .with_writer(BoxMakeWriter::new(writer))
+             .with_file(config.file_name)
+             .with_line_number(config.line_number)
+             .with_thread_ids(config.thread_id)
+             .with_target(config.event_target)
+             .with_level(true)
+             .with_ansi(with_ansi)
+             .compact()
+             .pretty()
+             .boxed()
+     } else {
+         tracing_subscriber::fmt::Layer::default()
+             .with_writer(BoxMakeWriter::new(writer))
+             .with_file(config.file_name)
+             .with_line_number(config.line_number)
+             .with_thread_ids(config.thread_id)
+             .with_target(config.event_target)
+             .with_level(true)
+             .with_ansi(with_ansi)
+             .compact()
+             .boxed()
+     };
 
     registry.with(layer)
 }
@@ -42,14 +57,14 @@ where R: Subscriber + for<'ls> LookupSpan<'ls> + Send + Sync
     let stdout = stdout.with_max_level(config.max_level.to_level());
     guards.push(_guard);
 
-    mk_layer(config, stdout, registry, true)
+    mk_layer(config, stdout, registry, true, config.pretty)
 }
 
 pub fn init_tracing(config: &TracingConfig) -> Vec<WorkerGuard> {
     let mut guards: Vec<WorkerGuard> = vec![];
 
     let registry = Registry::default();
-    
+
     let registry = mk_stdout_layer(config, &mut guards, registry);
 
     let registry = if config.log_to_file {
@@ -58,13 +73,13 @@ pub fn init_tracing(config: &TracingConfig) -> Vec<WorkerGuard> {
         let file = file.with_max_level(config.max_level.to_level());
         guards.push(_guard);
 
-        mk_layer(&config, file, registry, false)
+        mk_layer(&config, file, registry, false, config.pretty)
     } else {
         // We add stdout again, which does nothing, so we fulfill the type
         // expectation
         mk_stdout_layer(config, &mut guards, registry)
     };
-    
+
     //todo Add Loki tracing
 
     tracing::subscriber::set_global_default(registry)
