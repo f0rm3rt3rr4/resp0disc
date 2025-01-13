@@ -7,9 +7,72 @@ networks:
 #    external: true
 
 services:
+#  traefik:
+#    image: "traefik:v3.0"
+#    container_name: "traefik"
+#    command:
+#      # - "--log.level=DEBUG"
+#      # Only for Staging
+#      #      - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory" # debug
+#      - "--providers.docker=true"
+#      - "--providers.docker.exposedbydefault=false"
+#      - "--entryPoints.websecure.address=:443"
+#      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+#      - "--certificatesresolvers.myresolver.acme.email=dev@debankero.com"
+#      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+#    ports:
+#      - "443:443"
+#      - "80:80"
+#    volumes:
+#      - "./letsencrypt_data:/letsencrypt"
+#      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+#    labels:
+#      - "traefik.enable=true"
+#      - "traefik.http.routers.traefik.rule=Host(`traefik.internal`)"
+#      - "traefik.http.routers.traefik.service=api@internal"
+#    networks:
+#      backend-network:
+#        ipv4_address: 10.101.0.1
+#    logging:
+#      driver: "journald"
+#      options:
+#        tag: "traefik"
+
+  app:
+    build:
+      context: .
+      dockerfile: ./service/Dockerfile
+    container_name: resp0disc
+    volumes:
+      - ./log:/var/log/resp0disc/
+    env_file:
+      - ./secrets/.env.service
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      backend-network:
+        ipv4_address: 10.101.0.2
+    logging:
+      driver: "journald"
+      options:
+        tag: "resp0disc"
+    labels:
+      - "traefik.enable=true"
+      # Redirects
+      - "traefik.http.routers.src.entryPoints=port80"
+      - "traefik.http.routers.src.rule=host(`__SERVICE_DOMAIN__`)"
+      - "traefik.http.middlewares.src-redirect.redirectScheme.scheme=https"
+      - "traefik.http.middlewares.src-redirect.redirectScheme.permanent=true"
+      - "traefik.http.routers.src.middlewares=src-redirect"
+
+      - "traefik.http.routers.src.rule=Host(`__SERVICE_DOMAIN__`)"
+      - "traefik.http.routers.src.entrypoints=websecure"
+      - "traefik.http.routers.src.tls.certresolver=myresolver"
+
   postgres:
-    container_name: postgres
     image: postgres:16-alpine
+    container_name: postgres
     restart: unless-stopped
     ports:
       - "127.0.0.1:5432:5432"
@@ -20,7 +83,7 @@ services:
       - ./secrets/.env.postgres.dev_public
     networks:
       backend-network:
-        ipv4_address: 10.101.0.2
+        ipv4_address: 10.101.0.3
     logging:
       driver: "journald"
       options:
@@ -28,12 +91,42 @@ services:
 
   redis:
     image: redis:6.2-alpine
+    container_name: redis
     restart: always
     ports:
       - '6379:6379'
     command: redis-server --save 20 1 --loglevel warning
     networks:
       backend-network:
-        ipv4_address: 10.101.0.3
+        ipv4_address: 10.101.0.4
     volumes:
       - ./redis_data:/data
+
+#  grafana:
+#    image: grafana/grafana-enterprise:10.4.3
+#    container_name: grafana
+#    restart: unless-stopped
+#    logging:
+#      driver: "journald"
+#      options:
+#        tag: "grafana"
+#    #    ports:
+#    #      - '127.0.0.1:3000:3000'
+#    volumes:
+#      - ./grafana_data:/var/lib/grafana
+#    networks:
+#      backend-network:
+#        ipv4_address: 10.101.0.5
+#
+#    labels:
+#      - "traefik.enable=true"
+#      # Redirects
+#      - "traefik.http.routers.grafana.entryPoints=port80"
+#      - "traefik.http.routers.grafana.rule=host(`__GRAFANA_SUBDOMAIN__`)"
+#      - "traefik.http.middlewares.grafana-redirect.redirectScheme.scheme=https"
+#      - "traefik.http.middlewares.grafana-redirect.redirectScheme.permanent=true"
+#      - "traefik.http.routers.grafana.middlewares=grafana-redirect"
+#
+#      - "traefik.http.routers.grafana.rule=Host(`__GRAFANA_SUBDOMAIN__`)"
+#      - "traefik.http.routers.grafana.entrypoints=websecure"
+#      - "traefik.http.routers.grafana.tls.certresolver=myresolver"
