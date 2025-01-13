@@ -73,6 +73,11 @@ impl Clone for ServerConfig {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct HttpConfig {
+    pub auth_salt: String,
+}
+
+#[derive(Debug, Deserialize)]
 pub enum LogLevel {
     TRACE,
     DEBUG,
@@ -96,6 +101,7 @@ pub struct TracingConfig {
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
     pub server: ServerConfig,
+    pub http: HttpConfig,
     pub tracing: TracingConfig,
 }
 

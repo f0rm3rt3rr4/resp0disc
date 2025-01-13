@@ -11,12 +11,15 @@ server:
   server_hostname: "localhost"
   shutdown_timeout: 0
 
+http:
+  auth_salt: "1db393f1efd9c3f30a439ea4391c1300fb2c48eb41928df6aabdd0b7793797da"
+
 tracing:
   max_level: "DEBUG"
-  file_name: true
-  line_number: true
+  file_name: false
+  line_number: false
   thread_id: true
   event_target: false
   log_to_file: true
-  pretty: true
+  pretty: false
   log_dir: "./log"
