@@ -1,4 +1,8 @@
 /resp0disc-hidden/service/target
 /resp0disc-hidden/redis_data
 /resp0disc-hidden/postgres_data
+/resp0disc-hidden/grafana_data
 /resp0disc-hidden/service/log/
+/resp0disc-hidden/secrets/.env.postgres
+/resp0disc-hidden/secrets/.env.service
+
