@@ -10,3 +10,6 @@ tracing-appender = "0.2.3"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_yaml = "0.9.34-deprecated"
 actix-web = "4.9.0"
+async-redis-session = "0.2.2"
+async-session = "3.0.0"
+

@@ -2,10 +2,80 @@
 <head>
     <title>Landing Page</title>
     <style>
-        body {background-color: black;}
-        input {color: #00ff00; background: black; text-decoration-color: lime}
-        label {color: #00ff00;}
+        body {
+            background-color: black;
+        }
+
+        input {
+            color: #00ff00;
+            background: black;
+            text-decoration-color: lime
+        }
+
+        label {
+            color: #00ff00;
+        }
     </style>
+    <script type="text/javascript">
+        function get_cookie(name){
+            return document.cookie.split(';').some(c => {
+                return c.trim().startsWith(name + '=');
+            });
+        }
+        function delete_cookie( name, path) {
+            if( get_cookie( name ) ) {
+                document.cookie = name + "=" +
+                    ((path) ? ";path="+path:"")+
+                    // ((domain)?";domain="+domain:"") +
+                    ";expires=Thu, 01 Jan 1970 00:00:01 GMT";
+            }
+        }
+        function submitLogout() {
+            const clientId = "x0r0x";
+            const clientSecret = "uber_pass";
+            const authorizationBasic = window.btoa(clientId + ':' + clientSecret);
+            const request = new XMLHttpRequest();
+            request.open('POST', "/logout", true);
+            request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+            request.setRequestHeader('Authorization', 'Basic ' + authorizationBasic);
+            request.setRequestHeader('Accept', 'application/json');
+            const cookie = get_cookie("session")
+            request.send(JSON.stringify({
+                cookie: cookie,
+            }));
+            request.onreadystatechange = function () {
+                if (request.readyState === 4) {
+                    delete_cookie("session", "/");
+                }
+            };
+
+        }
+        function submitLogin() {
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("pass").value;
+
+            const clientId = "x0r0x";
+            const clientSecret = "uber_pass";
+
+            const authorizationBasic = window.btoa(clientId + ':' + clientSecret);
+
+            const request = new XMLHttpRequest();
+            request.open('POST', "/login", true);
+            request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+            request.setRequestHeader('Authorization', 'Basic ' + authorizationBasic);
+            request.setRequestHeader('Accept', 'application/json');
+            request.send(JSON.stringify({
+                username: user,
+                password: pass,
+            }));
+
+            // request.onreadystatechange = function () {
+            //     if (request.readyState === 4) {
+            //         alert(request.responseText);
+            //     }
+            // };
+        }
+    </script>
 </head>
 <body>
 <div>
@@ -18,7 +88,9 @@
     <input type="password" id="pass" name="password" minlength="8" required/>
 </div>
 
-<input type="submit" value="Sign in"/>
+<input type="submit" value="Log In" onclick="submitLogin('a','b')"/>
+
+<input type="submit" value="Log Out" onclick="submitLogout()"/>
 
 </body>
 </html>

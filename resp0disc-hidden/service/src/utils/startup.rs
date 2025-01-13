@@ -1,10 +1,16 @@
-use crate::utils::config::ServerConfig;
 use actix_web::http::KeepAlive::Timeout;
 use actix_web::{App, HttpServer};
 use std::thread::available_parallelism;
 use std::time::Duration;
+use actix_web::web::Data;
 use tracing::{error, info};
 use crate::consts::*;
+use crate::app::states::AppAuthState;
+use crate::routes::login::login;
+use crate::routes::index::index;
+use crate::routes::logout::logout;
+use crate::routes::ping::ping;
+use crate::utils::config::{HttpConfig, ServerConfig};
 
 fn set_worker_num(config: &mut ServerConfig) {
     if config.worker_num == 0 {
@@ -78,16 +84,27 @@ fn set_config_defaults(config: &ServerConfig) -> ServerConfig {
     config
 }
 
-pub async fn start_server(config: &ServerConfig) {
-    let host: &str = &config.host;
-    let port = config.port;
+pub async fn start_server(
+    server_config: ServerConfig, http_config: HttpConfig
+) {
+    let host: &str = &server_config.host;
+    let port = server_config.port;
 
     info!("Starting HTTP Server on {host}:{port}...");
 
-    let server_bind = HttpServer::new(|| App::new()).bind((host, port));
+    let server_bind = HttpServer::new(
+        move || App::new()
+            .app_data(
+                Data::new(AppAuthState::new(http_config.auth_salt.clone()))
+            )
+            .service(index)
+            .service(login)
+            .service(logout)
+            .service(ping)
+    ).bind((host, port));
 
     if server_bind.is_ok() {
-        let config = set_config_defaults(&config);
+        let config = set_config_defaults(&server_config);
 
         info!("Server config: {:#?}", config);
 

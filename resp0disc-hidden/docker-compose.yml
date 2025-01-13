@@ -45,8 +45,8 @@ services:
     container_name: resp0disc
     volumes:
       - ./log:/var/log/resp0disc/
-    env_file:
-      - ./secrets/.env.service
+#    env_file:
+#      - ./secrets/.env.service
     restart: unless-stopped
     ports:
       - "127.0.0.1:8080:8080"
@@ -80,7 +80,7 @@ services:
       - ./postgres_data:/var/lib/postgresql/data
       - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql
     env_file:
-      - ./secrets/.env.postgres.dev_public
+      - ./secrets/.env.postgres.template
     networks:
       backend-network:
         ipv4_address: 10.101.0.3
