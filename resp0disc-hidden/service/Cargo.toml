@@ -13,3 +13,4 @@ actix-web = "4.9.0"
 async-redis-session = "0.2.2"
 async-session = "3.0.0"
 tokio-postgres = { version = "0.7.12", features = ["runtime"] }
+hex = "0.4.3"

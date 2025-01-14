@@ -1,0 +1,1 @@
+pub static SQL_FETCH_USER: &str = "SELECT * FROM users WHERE user_name = $1";

@@ -32,7 +32,7 @@ pub async fn destroy_session(cookie_value: String, store: &RedisSessionStore) {
     }
 }
 
-pub async fn get_session(
+async fn _get_session(
     cookie_value: String, store: &RedisSessionStore
 ) -> Option<Session> {
     let session = store.load_session(id_from_cookie(cookie_value)).await;
@@ -47,14 +47,14 @@ pub async fn get_session(
     }
 }
 
-pub async fn check_session(
+pub async fn get_session(
     r: &HttpRequest,
     data: &Data<Arc<AppAuthState>>
 ) -> Option<Session> {
     let cookie = r.cookie("session");
     if cookie.is_some() {
         let c = cookie.unwrap();
-        let s = get_session(c.to_string(), &data.redis).await;
+        let s = _get_session(c.to_string(), &data.redis).await;
         if s.is_some() {
             let s = s.unwrap();
             info!("Logged in: {:?}", &s.id());

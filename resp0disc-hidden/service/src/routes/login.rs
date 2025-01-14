@@ -1,5 +1,6 @@
 use crate::app::states::AppAuthState;
-use crate::utils::session::{check_session, mk_session};
+use crate::utils::auth::{check_login_valid, AuthResult};
+use crate::utils::session::{get_session, mk_session};
 use actix_web::cookie::Cookie;
 use actix_web::http::StatusCode;
 use actix_web::web::{Data, Json};
@@ -28,32 +29,35 @@ async fn _mk_session(data: &Data<Arc<AppAuthState>>) -> HttpResponse {
 pub async fn login(
     r: HttpRequest,
     login_data: Json<LoginData>,
-    data: Data<Arc<AppAuthState>>,
+    auth_state: Data<Arc<AppAuthState>>,
 ) -> HttpResponse {
-    let _salt = &data.salt;
     info!(
         "Login Attempt: {}:{}",
         login_data.username, login_data.password
     );
 
-    let client = &data.pg_client;
-    let row = client
-        .query_one("SELECT * FROM users WHERE id = $1", &[&1])
-        .await;
-
-    if row.is_ok() {
-        let row = row.unwrap();
-        let user_name = row.get::<_, String>("user_name");
-        let password = row.get::<_, String>("password");
-        
-        println!("value: {}:{}", user_name, password);
-    } else {
-        println!("Error.");
-    }
-
-    if check_session(&r, &data).await.is_some() {
+    if get_session(&r, &auth_state).await.is_some() {
         HttpResponse::Ok().status(StatusCode::ACCEPTED).finish()
     } else {
-        _mk_session(&data).await
+        match check_login_valid(
+            &login_data.username,
+            &login_data.password,
+            &auth_state
+        ).await {
+            AuthResult::Ok => _mk_session(&auth_state).await,
+            AuthResult::NoUserFound => {
+                info!(
+                    "Unable to login, no user found: {}", &login_data.username
+                );
+                HttpResponse::Unauthorized().finish()
+            }
+            AuthResult::InvalidPassword => {
+                info!(
+                    "Unable to login, invalid password: {}",
+                    &login_data.username
+                );
+                HttpResponse::Unauthorized().finish()
+            }
+        }
     }
 }

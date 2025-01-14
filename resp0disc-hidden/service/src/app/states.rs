@@ -9,7 +9,7 @@ use tracing::error;
 pub struct AppAuthState {
     pub redis: RedisSessionStore,
     pub pg_client: Client,
-    pub salt: String,
+    pub salt: Vec<u8>,
 }
 
 impl AppAuthState {
@@ -32,8 +32,8 @@ impl AppAuthState {
             let redis = redis.unwrap();
             Self {
                 redis,
-                salt,
                 pg_client,
+                salt: salt.into_bytes()
             }
         } else {
             error!("Could not connect to Redis");
