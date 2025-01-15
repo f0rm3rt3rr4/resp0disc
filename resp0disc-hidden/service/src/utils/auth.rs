@@ -5,8 +5,7 @@ use async_session::sha2;
 use async_session::sha2::Digest;
 use std::cmp::Ordering;
 use std::sync::Arc;
-use serde::Deserialize;
-use tracing::info;
+use tracing::{error};
 
 #[derive(Debug, PartialEq)]
 pub enum AuthResult {
@@ -15,7 +14,7 @@ pub enum AuthResult {
     InvalidPassword,
 }
 
-fn hash_password(password: &str, salt: &[u8]) -> String {
+pub fn hash_password(password: &str, salt: &[u8]) -> String {
     let password_with_salt = [&salt, password.as_bytes()].concat();
     hex::encode(sha2::Sha256::digest(&password_with_salt))
 }
@@ -33,10 +32,10 @@ pub async fn check_login_valid(
     auth_state: &Data<Arc<AppAuthState>>,
 ) -> AuthResult {
     let client = &auth_state.pg_client;
-    let row = client.query_one(SQL_FETCH_USER, &[&username]).await;
+    let row = client.query_opt(SQL_FETCH_USER, &[&username]).await;
 
     match row {
-        Ok(row) => {
+        Ok(Some(row)) => {
             let db_password = row.get::<_, String>("password");
             let b = verify_password(&password, &db_password, &auth_state.salt);
             if b {
@@ -45,8 +44,9 @@ pub async fn check_login_valid(
                 AuthResult::InvalidPassword
             }
         }
-        Err(_) => {
-            // todo handle other errors
+        Ok(None) => AuthResult::NoUserFound,
+        Err(err) => {
+            error!("Unable to fetch user from the DB, error: {}", err);
             AuthResult::NoUserFound
         }
     }

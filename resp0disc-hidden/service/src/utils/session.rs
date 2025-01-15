@@ -15,23 +15,6 @@ fn id_from_cookie(s: String) -> String {
         .to_string()
 }
 
-pub async fn destroy_session(cookie_value: String, store: &RedisSessionStore) {
-    let session = store
-        .load_session(id_from_cookie(cookie_value))
-        .await
-        .unwrap();
-    
-    match session {
-        Some(mut sess) => {
-            sess.expire_in(Duration::from_millis(0));
-            store.destroy_session(sess).await.unwrap();
-        }
-        None => {
-            info!("Session cookie not found.");
-        }
-    }
-}
-
 async fn _get_session(
     cookie_value: String, store: &RedisSessionStore
 ) -> Option<Session> {
@@ -44,6 +27,23 @@ async fn _get_session(
         }
     } else {
         None
+    }
+}
+
+pub async fn destroy_session(cookie_value: String, store: &RedisSessionStore) {
+    let session = store
+        .load_session(id_from_cookie(cookie_value))
+        .await
+        .unwrap();
+
+    match session {
+        Some(mut sess) => {
+            sess.expire_in(Duration::from_millis(0));
+            store.destroy_session(sess).await.unwrap();
+        }
+        None => {
+            info!("Session cookie not found.");
+        }
     }
 }
 
@@ -67,7 +67,9 @@ pub async fn get_session(
     }
 }
 
-pub async fn mk_session(auth_state: &Data<Arc<AppAuthState>>) -> (String, Session) {
+pub async fn mk_session(
+    auth_state: &Data<Arc<AppAuthState>>
+) -> (String, Session) {
     let store = &auth_state.redis;
     let mut session = Session::new();
     session.expire_in(Duration::from_secs(500));

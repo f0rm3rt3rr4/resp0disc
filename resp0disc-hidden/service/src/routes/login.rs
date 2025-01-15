@@ -1,7 +1,7 @@
 use crate::app::states::AppAuthState;
 use crate::utils::auth::{check_login_valid, AuthResult};
 use crate::utils::session::{get_session, mk_session};
-use actix_web::cookie::Cookie;
+use actix_web::cookie::{Cookie, SameSite};
 use actix_web::http::StatusCode;
 use actix_web::web::{Data, Json};
 use actix_web::{post, HttpRequest, HttpResponse};
@@ -20,7 +20,9 @@ async fn _mk_session(data: &Data<Arc<AppAuthState>>) -> HttpResponse {
 
     info!("Session Created: {}", &session.id());
 
-    let cookie = Cookie::build("session", &cv).finish();
+    let cookie = Cookie::build("session", &cv)
+        .same_site(SameSite::Strict)
+        .finish();
 
     HttpResponse::Ok().cookie(cookie).finish()
 }

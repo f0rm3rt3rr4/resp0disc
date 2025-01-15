@@ -5,7 +5,6 @@ use std::time::Duration;
 use tokio_postgres::{connect, Client, NoTls};
 use tracing::error;
 
-// #[derive(Clone)]
 pub struct AppAuthState {
     pub redis: RedisSessionStore,
     pub pg_client: Client,
@@ -16,6 +15,7 @@ impl AppAuthState {
     pub async fn new(salt: String) -> Self {
         let redis = RedisSessionStore::new("redis://127.0.0.1:6379/0");
 
+        //todo handle errors
         let (pg_client, pg_conn) = connect(
             "host=127.0.0.1 \
             dbname=resp0disc \
